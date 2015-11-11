@@ -4,12 +4,14 @@ oidcdata:
     env_file:
         - common.env
         - services/openidconnect/openidconnect.env
+        - services/openldap/LDAP.env
 oidc:
     container_name: adapter
     image: learninglayers/openidconnect:0.0.1
     env_file:
         - common.env
         - services/openidconnect/openidconnect.env
+        - services/openldap/LDAP.env
     volumes_from:
         - oidcdata
     links:
@@ -17,3 +19,5 @@ oidc:
         - openldap
     volumes:
         - /dev/urandom:/dev/random
+    actions:
+        - create_databases: openidconnect.env
