@@ -32,6 +32,7 @@
 		<property name="issuer" value="LAYERS_API_URIo/oauth2/" /> <!-- Issuer URL goes here -->
  		<property name="logoImageUrl" value="LAYERS_API_URIlogo.png" />
  		<property name="topbarTitle" value="Learning Layers OIDC" />
+ 		<property name="forceHttps" value="true" />
 	</bean>
 	
 </beans>
