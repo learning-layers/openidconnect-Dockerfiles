@@ -7,7 +7,7 @@ oidcdata:
         - services/openldap/LDAP.env
 oidc:
     container_name: oidc
-    image: learninglayers/openidconnect:0.0.7
+    image: learninglayers/openidconnect:0.0.8
     env_file:
         - common.env
         - services/openidconnect/openidconnect.env
