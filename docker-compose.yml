@@ -20,4 +20,4 @@ oidc:
     volumes:
         - /dev/urandom:/dev/random
     actions:
-        - create_databases: openidconnect.env
+        - create_databases: [openidconnect.env]
