@@ -463,6 +463,24 @@ CREATE TABLE `whitelisted_site_scope` (
 --
 
 --
+-- Fixes to generate the scope definitions during install
+--
+
+--
+-- From https://github.com/mitreid-connect/OpenID-Connect-Java-Spring-Server/blob/master/openid-connect-server-webapp/src/main/resources/db/tables/loading_temp_tables.sql
+--
+
+CREATE TEMPORARY TABLE IF NOT EXISTS system_scope_TEMP (
+    scope VARCHAR(256),
+    description VARCHAR(4096),
+    icon VARCHAR(256),
+    allow_dyn_reg BOOLEAN,
+    default_scope BOOLEAN,
+    structured BOOLEAN,
+    structured_param_description VARCHAR(256)
+);
+
+--
 -- Turn off autocommit and start a transaction so that we can use the temp tables
 -- Info from: http://stackoverflow.com/questions/2280465/how-do-i-turn-off-autocommit-for-a-mysql-client 
 -- http://dev.mysql.com/doc/refman/5.7/en/commit.html 
