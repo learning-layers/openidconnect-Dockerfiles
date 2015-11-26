@@ -459,8 +459,16 @@ CREATE TABLE `whitelisted_site_scope` (
 --
 -- Turn off autocommit and start a transaction so that we can use the temp tables
 --
+-- From https://github.com/mitreid-connect/OpenID-Connect-Java-Spring-Server/blob/master/openid-connect-server-webapp/src/main/resources/db/scopes.sql
+--
 
-SET AUTOCOMMIT FALSE;
+--
+-- Turn off autocommit and start a transaction so that we can use the temp tables
+-- Info from: http://stackoverflow.com/questions/2280465/how-do-i-turn-off-autocommit-for-a-mysql-client 
+-- http://dev.mysql.com/doc/refman/5.7/en/commit.html 
+--
+
+SET autocommit=0;
 
 START TRANSACTION;
 
@@ -468,27 +476,38 @@ START TRANSACTION;
 -- Insert scope information into the temporary tables.
 -- 
 
-INSERT INTO system_scope_TEMP (scope, description, icon, restricted, default_scope, structured, structured_param_description) VALUES
-  ('openid', 'log in using your identity', 'user', false, true, false, null),
-  ('profile', 'basic profile information', 'list-alt', false, true, false, null),
-  ('email', 'email address', 'envelope', false, true, false, null),
-  ('address', 'physical address', 'home', false, true, false, null),
-  ('phone', 'telephone number', 'bell', false, true, false, null),
-  ('offline_access', 'offline access', 'time', false, false, false, null);
+INSERT INTO system_scope_TEMP (scope, description, icon, allow_dyn_reg, default_scope, structured, structured_param_description) VALUES
+  ('openid', 'log in using your identity', 'user', true, true, false, null),
+  ('profile', 'basic profile information', 'list-alt', true, true, false, null),
+  ('email', 'email address', 'envelope', true, true, false, null),
+  ('address', 'physical address', 'home', true, true, false, null),
+  ('phone', 'telephone number', 'bell', true, true, false, null),
+  ('offline_access', 'offline access', 'time', true, false, false, null);
   
 --
 -- Merge the temporary scopes safely into the database. This is a two-step process to keep scopes from being created on every startup with a persistent store.
 --
 
-MERGE INTO system_scope
-	USING (SELECT scope, description, icon, restricted, default_scope, structured, structured_param_description FROM system_scope_TEMP) AS vals(scope, description, icon, restricted, default_scope, structured, structured_param_description)
-	ON vals.scope = system_scope.scope
-	WHEN NOT MATCHED THEN
-	  INSERT (scope, description, icon, restricted, default_scope, structured, structured_param_description) VALUES(vals.scope, vals.description, vals.icon, vals.restricted, vals.default_scope, vals.structured, vals.structured_param_description);
+INSERT INTO system_scope (scope, description, icon, allow_dyn_reg, default_scope, structured, structured_param_description)
+    SELECT scope, description, icon, allow_dyn_reg, default_scope, structured, structured_param_description FROM system_scope_TEMP
+    ON DUPLICATE KEY UPDATE
+    scope = values(scope),
+    description = values(description),
+    icon = values(icon),
+    allow_dyn_reg = values(allow_dyn_reg),
+    default_scope = values(default_scope),
+    structured = values(structured),
+    structured_param_description = values(structured_param_description);
+
+-- MERGE INTO system_scope
+--     USING (SELECT scope, description, icon, restricted, default_scope, structured, structured_param_description FROM system_scope_TEMP) AS vals(scope, description, icon, restricted, default_scope, structured, structured_param_description)
+--     ON vals.scope = system_scope.scope
+--     WHEN NOT MATCHED THEN
+--       INSERT (scope, description, icon, restricted, default_scope, structured, structured_param_description) VALUES(vals.scope, vals.description, vals.icon, vals.restricted, vals.default_scope, vals.structured, vals.structured_param_description);
 
 COMMIT;
 
-SET AUTOCOMMIT TRUE;
+SET autocommit=1;
 
 --
 -- Dumping events for database 'OpenIDConnect'
