@@ -1,4 +1,4 @@
-FROM learninglayers/tomcat:7.0.65
+FROM learninglayers/tomcat:7.0.73
 MAINTAINER Petru Nicolaescu
 
 
