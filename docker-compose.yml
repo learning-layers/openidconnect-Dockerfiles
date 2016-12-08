@@ -1,13 +1,13 @@
 oidcdata:
     container_name: oidc-data
-    image: learninglayers/openidconnect-data:0.0.10
+    image: learninglayers/openidconnect-data:0.0.14
     env_file:
         - common.env
         - services/openidconnect/openidconnect.env
         - services/openldap/LDAP.env
 oidc:
     container_name: oidc
-    image: learninglayers/openidconnect:0.0.10
+    image: learninglayers/openidconnect:0.0.14
     env_file:
         - common.env
         - services/openidconnect/openidconnect.env
