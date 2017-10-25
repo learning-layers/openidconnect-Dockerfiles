@@ -15,6 +15,11 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
+
+<!-- In case Docker Layers Box configuration is used, the following row shall be the only content of this file. 
+For standalone deployment, leave this row commented -->
+<!--	<import resource="file:/etc/mitreid-connect/user-context.xml" /> -->
+
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:mvc="http://www.springframework.org/schema/mvc"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -22,12 +27,14 @@
 	xmlns:context="http://www.springframework.org/schema/context"
 	xmlns:security="http://www.springframework.org/schema/security"
 	xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
+	xmlns:util="http://www.springframework.org/schema/util"
 	xsi:schemaLocation="http://www.springframework.org/schema/security/oauth2 http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd
-		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.1.xsd
-		http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.2.xsd
-		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.1.xsd
-		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.1.xsd
-		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.1.xsd">
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd
+		http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-4.2.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.3.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd">
 
 <bean id="propertyPlaceholderConfigurer"   
     class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">  
@@ -35,7 +42,7 @@
     <property name="searchSystemEnvironment" value="true" />
 </bean>  
 
-	<security:authentication-manager alias="authenticationManager">
+	<security:authentication-manager id="authenticationManager">
 		<security:authentication-provider ref="ldapAuthProvider" />
 	</security:authentication-manager>
 	
@@ -50,13 +57,14 @@
      <constructor-arg index="2" ref="contextSource" />
    </bean>
 	
-	<bean id="contextSource"
-         class="org.springframework.security.ldap.DefaultSpringSecurityContextSource">
-     <constructor-arg value="ldap://openldap:389/LDAP_ROOT_DN"/> <!-- LDAP url goes here, format: ldap://url:port/root -->
-	 <property name="anonymousReadOnly" value="true"/>
-   </bean>
+	<!-- Changed this -->
+	<bean id="contextSource" class="org.springframework.ldap.core.support.LdapContextSource">
+		<property name="url" value="ldap://openldap" />
+		<property name="base" value="LDAP_ROOT_DN" />
+		<property name="anonymousReadOnly" value="true"/>
+	</bean>
 	
-	
+		
 	<bean id="ldapAuthProvider" class="org.springframework.security.ldap.authentication.LdapAuthenticationProvider">
 		<constructor-arg>
 			<bean class="org.springframework.security.ldap.authentication.BindAuthenticator">
@@ -73,6 +81,7 @@
 			<bean class="edu.mit.kit.userdetails.MappedLdapAuthoritiesPopulator">
 				<property name="admins">
 					<set>
+					<value>XXXXXXXX</value>
 					<!--	  list admin usernames here-->
 						<!-- Format: <value> uid </value> -->
 					</set>
@@ -86,6 +95,10 @@
 		<constructor-arg name="contextSource" ref="contextSource" />
 	</bean>
 	
+	<bean id="ldapUserInfoRepository" primary="true" class="edu.mit.kit.repository.impl.LdapUserInfoRepository">
+		<property name="ldapTemplate" ref="ldapTemplate" />
+	</bean>
+	
 	<bean id="namedParameterJdbcTemplate" class="org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate">
 		<constructor-arg name="dataSource" ref="dataSource" />
 	</bean>
@@ -93,10 +106,12 @@
 	
 	<mvc:view-controller path="/login" view-name="login" />
 
-	<security:http disable-url-rewriting="true" use-expressions="true"> 
-		<security:form-login login-page="/login" authentication-failure-url="/login?error=failure" authentication-success-handler-ref="authenticationTimeStamper" />
+	<security:http disable-url-rewriting="true" use-expressions="true" authentication-manager-ref="authenticationManager"> 
+	
 		<security:intercept-url pattern="/authorize" access="hasRole('ROLE_USER')" />
 		<security:intercept-url pattern="/**" access="permitAll" />
+		
+		<security:form-login login-page="/login" authentication-failure-url="/login?error=failure" authentication-success-handler-ref="authenticationTimeStamper" />
 		<security:custom-filter ref="authRequestFilter" after="SECURITY_CONTEXT_FILTER" />
 		<security:logout logout-url="/logout" />
 		<security:anonymous />
